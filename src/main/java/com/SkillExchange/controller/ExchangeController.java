@@ -25,6 +25,24 @@ public class ExchangeController {
     public Exchange getExchangeById(@PathVariable String id) {
         return exchangeService.getExchangeById(id);
     }
+    
+ // File: com.SkillExchange.controller.ExchangeController.java (ADD THIS METHOD)
+
+ // ✅ Get exchanges by receiver ID and optional status
+ @GetMapping("/receiver/{receiverId}")
+ public List<Exchange> getExchangesByReceiverId(
+         @PathVariable String receiverId,
+         // The frontend will send ?status=pending
+         @RequestParam(required = false) String status 
+ ) {
+     if (status != null && !status.isEmpty()) {
+         // Call service to find requests by receiverId AND status
+         return exchangeService.findExchangesByReceiverIdAndStatus(receiverId, status);
+     }
+     // Fallback: If status is not provided, get all exchanges for the receiver
+     return exchangeService.findExchangesByReceiverId(receiverId);
+ }
+ 
 
     // Create a new exchange
     @PostMapping
@@ -46,4 +64,6 @@ public class ExchangeController {
     public void deleteExchange(@PathVariable String id) {
         exchangeService.deleteExchange(id);
     }
+    
+    
 }

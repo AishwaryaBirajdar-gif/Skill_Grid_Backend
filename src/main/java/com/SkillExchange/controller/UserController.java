@@ -48,8 +48,10 @@ public class UserController {
     }
 
     // ---------------- UPDATE USER ----------------
+ // UserController.java
     @PutMapping("/{id}")
     public ResponseEntity<User> updateUser(@PathVariable String id, @RequestBody User userDetails) {
+        // This will now receive the name, bio, skillsOffered, and skillsWanted
         return ResponseEntity.ok(userService.updateUser(id, userDetails));
     }
 
@@ -58,5 +60,13 @@ public class UserController {
     public ResponseEntity<String> deleteUser(@PathVariable String id) {
         userService.deleteUser(id);
         return ResponseEntity.ok("User deleted successfully");
+    }
+    
+ // Add this to your UserController.java
+
+    @GetMapping("/browse")
+    public ResponseEntity<List<User>> browseUsers(@RequestParam String skill) {
+        List<User> users = userService.searchUsersBySkill(skill);
+        return ResponseEntity.ok(users);
     }
 }

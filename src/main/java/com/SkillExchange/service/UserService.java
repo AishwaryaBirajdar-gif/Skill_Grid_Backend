@@ -14,19 +14,23 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
-    // Create User from BaseUser + additional info
-    public User createUser(BaseUser baseUser, User userDetails) {
-        // Use BaseUser data
-        User user = new User(baseUser);
+    // ✅ STEP 2 Logic: Search for users offering a specific skill
+    public List<User> searchUsersBySkill(String skill) {
+        return userRepository.findBySkillsOfferedContainingIgnoreCase(skill);
+    }
 
-        // Set additional fields
+    public User createUser(BaseUser baseUser, User userDetails) {
+        User user = new User(baseUser);
         user.setUsername(userDetails.getUsername());
         user.setBio(userDetails.getBio());
         user.setLocation(userDetails.getLocation());
         user.setTimezone(userDetails.getTimezone());
         user.setLanguages(userDetails.getLanguages());
-        user.setSkills(userDetails.getSkills());
         user.setProfilePic(userDetails.getProfilePic());
+        
+        // Initialize lists to avoid null pointers
+        user.setSkillsOffered(userDetails.getSkillsOffered());
+        user.setSkillsWanted(userDetails.getSkillsWanted());
 
         return userRepository.save(user);
     }
@@ -43,28 +47,29 @@ public class UserService {
     public User updateUser(String id, User userDetails) {
         User user = getUserById(id);
 
-        // Update BaseUser fields (if allowed)
+        // Update basic info
         if (userDetails.getName() != null) user.setName(userDetails.getName());
-
-        // Update additional User fields
-        if (userDetails.getUsername() != null) user.setUsername(userDetails.getUsername());
         if (userDetails.getBio() != null) user.setBio(userDetails.getBio());
         if (userDetails.getLocation() != null) user.setLocation(userDetails.getLocation());
-        if (userDetails.getTimezone() != null) user.setTimezone(userDetails.getTimezone());
-        if (userDetails.getLanguages() != null) user.setLanguages(userDetails.getLanguages());
-        if (userDetails.getSkills() != null) user.setSkills(userDetails.getSkills());
         if (userDetails.getProfilePic() != null) user.setProfilePic(userDetails.getProfilePic());
-        if (userDetails.getAvaliable() != null) user.setAvaliable(userDetails.getAvaliable()); // ✅ Availability update
+        if (userDetails.getAvaliable() != null) user.setAvaliable(userDetails.getAvaliable());
 
+        // ✅ IMPORTANT: Update the Skill Lists for Bartering
+        if (userDetails.getSkillsOffered() != null) {
+            user.setSkillsOffered(userDetails.getSkillsOffered());
+        }
+        if (userDetails.getSkillsWanted() != null) {
+            user.setSkillsWanted(userDetails.getSkillsWanted());
+        }
+
+        // Maintain points
         user.setKarmaPoints(userDetails.getKarmaPoints());
         user.setTrustScore(userDetails.getTrustScore());
 
         return userRepository.save(user);
     }
 
-
     public void deleteUser(String id) {
-        User user = getUserById(id);
-        userRepository.delete(user);
+        userRepository.deleteById(id);
     }
 }

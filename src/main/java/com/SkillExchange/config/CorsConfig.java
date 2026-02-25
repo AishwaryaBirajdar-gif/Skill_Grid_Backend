@@ -13,11 +13,12 @@ public class CorsConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**")
-                        .allowedOrigins("http://localhost:5173") // Use a single call with multiple origins
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                        .allowedHeaders("*")
-                        .allowCredentials(true);
+            	registry.addMapping("/**")
+                .allowedOriginPatterns("http://localhost:5173")
+                .allowedMethods("*")
+                .allowedHeaders("*")
+                .allowCredentials(true);
+
             }
         };
     }

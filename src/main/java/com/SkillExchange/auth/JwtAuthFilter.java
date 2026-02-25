@@ -9,8 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
-
-import java.io.IOException; // ADD THIS
+import java.io.IOException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,9 +24,23 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     @Autowired
     private UserDetailsService userDetailsService;
 
+    /**
+     * CRITICAL FIX: Overrides the method to prevent this filter from running
+     * on endpoints that should be publicly accessible (like /api/auth/signup).
+     * By skipping this filter, the request reaches SecurityConfig's allowAll() rule.
+     */
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        // Skips the filter for all endpoints starting with /api/auth/
+        // This allows the SecurityConfig.permitAll() to finally handle the request.
+        return request.getRequestURI().startsWith("/api/auth/");
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
+
+        // NOTE: This filter is skipped if the URI starts with /api/auth/ due to shouldNotFilter() above.
 
         final String authHeader = request.getHeader("Authorization");
         String email = null;
@@ -49,8 +62,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             }
         }
 
-
         chain.doFilter(request, response);
     }
 }
-

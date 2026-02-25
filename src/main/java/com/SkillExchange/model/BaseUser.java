@@ -4,9 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document; // <-- NEW IMPORT
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Document(collection = "baseUser") // <-- CRITICAL FIX: Link to the 'baseUser' collection
 public class BaseUser {
     @Id
     private String id;

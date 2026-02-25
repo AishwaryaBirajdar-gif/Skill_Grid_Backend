@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 
 import com.SkillExchange.auth.JwtUtil;
 import com.SkillExchange.auth.LoginRequest;
-import com.SkillExchange.model.User;
 import com.SkillExchange.model.BaseUser;
 import com.SkillExchange.model.JwtResponse;
 import com.SkillExchange.repository.BaseUserRepository;
@@ -40,6 +39,8 @@ public class AuthController {
     // **Signup method** - Register new users and return a JWT token
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody BaseUser baseuser) {
+        System.out.println("--- DEBUG: Incoming Signup Request for Email: " + baseuser.getEmail() + " ---"); // ⬅️ NEW LOG
+
         // Check if the email is already registered
         if (baseuserRepository.findByEmail(baseuser.getEmail()).isPresent()) {
             return ResponseEntity.badRequest().body("Email is already in use.");
@@ -48,16 +49,17 @@ public class AuthController {
         // Encode the password
         baseuser.setPassword(passwordEncoder.encode(baseuser.getPassword()));
 
-//        if (user.getRole() == null) {
-//            user.setRole(BaseUser.role.USER); // Default role
-//        }
         if (baseuser.getRole() == null) {
-        	baseuser.setRole(BaseUser.Role.USER); // ✅ reference inner enum
+            baseuser.setRole(BaseUser.Role.USER); // ✅ reference inner enum
         }
+
+        System.out.println("--- DEBUG: Attempting to save user with Role: " + baseuser.getRole().name() + " ---"); // ⬅️ NEW LOG
 
         // Save the user to the database
         baseuserRepository.save(baseuser);
 
+        System.out.println("--- DEBUG: baseuserRepository.save() executed! User ID (after save): " + baseuser.getId() + " ---"); // ⬅️ NEW LOG
+        
         // Generate JWT token for the newly registered user
         String role = baseuser.getRole().name(); // Get the role assigned to the user
         String token = jwtUtil.generateToken(baseuser.getEmail(), role, baseuser.getId());
@@ -74,48 +76,6 @@ public class AuthController {
         return ResponseEntity.ok(response); // Return response with JWT token
     }
 
-//    @PostMapping("/login")
-//    public ResponseEntity<?> signin(@RequestBody LoginRequest loginRequest) {
-//        try {
-//            // Authenticate the user
-//            Authentication authentication = authenticationManager.authenticate(
-//                    new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())
-//            );
-//
-//            // Set authentication context
-//            SecurityContextHolder.getContext().setAuthentication(authentication);
-//
-//            // Retrieve user details from authentication object
-//            org.springframework.security.core.userdetails.BaseUser userDetails =
-//                    (org.springframework.security.core.userdetails.BaseUser) authentication.getPrincipal();
-//
-//            // Fetch additional user details from your UserService
-//            BaseUser user = userService.findByEmail(userDetails.getUsername());
-//            if (user == null) {
-//                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
-//            }
-//
-//            // Retrieve the user's role
-//            String role = authentication.getAuthorities().iterator().next().getAuthority(); // Get the first role
-//
-//            // Generate JWT token (include userId)
-//            String token = jwtUtil.generateToken(user.getEmail(), role, user.getId());
-//
-//            // Return response with JWT, user details, and role
-//            JwtResponse response = new JwtResponse(
-//                    token,
-//                    user.getId(),
-//                    user.getEmail(),
-//                    user.getName(),
-//                    role // Include role in response
-//            );
-//
-//            return ResponseEntity.ok(response);
-//
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password");
-//        }
-//    }
     @PostMapping("/login")
     public ResponseEntity<?> signin(@RequestBody LoginRequest loginRequest) {
         try {
@@ -126,7 +86,6 @@ public class AuthController {
                             loginRequest.getPassword()
                     )
             );
-          
 
             // Save authentication in context
             SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -136,7 +95,7 @@ public class AuthController {
                     (org.springframework.security.core.userdetails.User) authentication.getPrincipal();
 
             // ✅ Fetch the actual BaseUser from DB (Mongo)
-         // Fetch BaseUser from DB using Optional
+            // Fetch BaseUser from DB using Optional
             BaseUser user = baseuserRepository.findByEmail(userDetails.getUsername())
                     .orElse(null);
 
@@ -165,5 +124,4 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password");
         }
     }
-
 }

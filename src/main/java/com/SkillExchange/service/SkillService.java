@@ -89,4 +89,42 @@ public class SkillService {
         }
         return false;
     }
+
+
+	
+	public List<Skill> getSkillsByOwnerId(String userId) {
+	    // 1. Find the User using the provided userId
+	    Optional<User> userOptional = userRepository.findById(userId); // Assuming findById exists in UserRepository
+
+	    if (userOptional.isEmpty()) {
+	        // Handle case where user does not exist
+	        return List.of(); // Return an empty list
+	    }
+
+	    User user = userOptional.get();
+	    
+	    // 2. Get the list of skill IDs from the User object
+	    List<String> skillIds = user.getSkills();
+
+	    if (skillIds == null || skillIds.isEmpty()) {
+	        return List.of(); // Return an empty list if the user has no skills listed
+	    }
+
+	    // 3. Fetch the actual Skill objects using the list of IDs
+	    // Assuming SkillRepository extends MongoRepository or JpaRepository
+	    // and that you can use findAllById(Iterable<ID> ids)
+	    List<Skill> skills = skillRepository.findAllById(skillIds);
+	    
+	    return skills;
+	}
+
+	public boolean deleteByUserIdAndSkillName(String userId, String skillName) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	public Object getSkillCounts(String userId) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

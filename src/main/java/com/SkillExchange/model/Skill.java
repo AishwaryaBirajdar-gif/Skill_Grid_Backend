@@ -2,7 +2,6 @@ package com.SkillExchange.model;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,10 +13,15 @@ import lombok.NoArgsConstructor;
 public class Skill {
 
     @Id
-    private String id;  // MongoDB generates ObjectId automatically
+    private String id;
 
-    private String skillName;   // unique skill name
-    private String category;    // Tech, Art, Fitness, etc.
+    private String skillName;
+    private String category;
     private String description;
+    
+    // ADD THESE TWO FIELDS
+    private String type;      // Will store "OFFERED" or "WANTED"
+    private String userId;    // To know which user this skill belongs to
+    
     private boolean isTrending = false;
 }

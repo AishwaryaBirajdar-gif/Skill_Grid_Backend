@@ -72,4 +72,20 @@ public class ExchangeService {
     public void deleteExchange(String id) {
         exchangeRepository.deleteById(id);
     }
+
+
+	
+    public List<Exchange> findExchangesByReceiverIdAndStatus(String receiverId, String status) {
+        // Logic: Use ExchangeRepository to query where receiverId = [receiverId] AND status = [status]
+        // Example Spring Data Repository call: return exchangeRepository.findByReceiverIdAndStatus(receiverId, status);
+        // You will need to create this method in your ExchangeRepository.
+        return List.of(); // Replace with actual implementation
+    }
+
+    // 2. Find by receiver ID (Fallback)
+    public List<Exchange> findExchangesByReceiverId(String receiverId) {
+        // Logic: Use ExchangeRepository to query where receiverId = [receiverId]
+        // Example Spring Data Repository call: return exchangeRepository.findByReceiverId(receiverId);
+        return List.of(); // Replace with actual implementation
+    }
 }

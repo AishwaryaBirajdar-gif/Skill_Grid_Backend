@@ -53,41 +53,26 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // 1. Disable CSRF (Common for stateless REST APIs)
             .csrf(csrf -> csrf.disable())
-
-            // 2. Explicitly apply the CorsConfigurationSource bean
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-
-            // 3. Define authorization rules (Using modern authorizeHttpRequests)
             .authorizeHttpRequests(auth -> auth
-                // Allow public access to all /api/auth endpoints (signup, login)
-                // This is the /403 fix: allowing signup/login without auth
-                .requestMatchers("/api/auth", "/api/auth/**").permitAll()
+                // 1. Public endpoints
+                .requestMatchers("/api/auth/**").permitAll()
 
-                // Define authenticated endpoints
-                .requestMatchers("/api/patient/**").authenticated()
-                .requestMatchers("/api/doctor/**").authenticated()
-                .requestMatchers("/api/order/**").authenticated()
-                .requestMatchers("/api/medicine-request/**").authenticated()
-                .requestMatchers("/api/medicines/**").authenticated()
-                .requestMatchers("/api/appointments/**").authenticated()
-                .requestMatchers("/api/prescriptions/**").authenticated()
-                .requestMatchers("/api/consultation**").authenticated()
+                // 2. FIXED: Explicitly allow User and Skill endpoints
+                // Without these, your Profile and Dashboard will always return 403/401
+                .requestMatchers("/api/user/**").authenticated()
+                .requestMatchers("/api/skills/**").authenticated()
 
-                // Role-based access (Example: specific roles for medical store)
-                .requestMatchers("/api/medicalstore/**").hasAnyRole("PATIENT", "DOCTOR", "PHARMACIST")
+                // 3. Keep other relevant endpoints
+                .requestMatchers("/api/dashboard/**").authenticated()
                 
-                // Protect all other endpoints by requiring authentication
+                // Protect everything else
                 .anyRequest().authenticated()
             )
-
-            // 4. Configure session management to be stateless (for JWT)
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
-
-            // 5. Add JWT filter before the standard authentication filter
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

@@ -1,4 +1,4 @@
-package com.SkillExchange.repository;
+package com.SkillExchange.repository; // <--- Double check this line
 
 import com.SkillExchange.model.SkillRequest;
 import org.springframework.data.mongodb.repository.MongoRepository;

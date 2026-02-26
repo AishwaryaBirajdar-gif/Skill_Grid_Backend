@@ -20,4 +20,8 @@ public class BaseUserService {
     public BaseUser save(BaseUser user) {
         return baseUserRepository.save(user);
     }
+
+    public Optional<BaseUser> findById(String id) {
+        return baseUserRepository.findById(id);
+    }
 }

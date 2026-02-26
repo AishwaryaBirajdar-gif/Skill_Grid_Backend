@@ -4,6 +4,7 @@ import com.SkillExchange.model.BaseUser;
 import com.SkillExchange.model.User;
 import com.SkillExchange.service.BaseUserService;
 import com.SkillExchange.service.UserService;
+import com.SkillExchange.repository.BaseUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -22,11 +23,50 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private BaseUserRepository baseUserRepository;
+
+    // ---------------- GET USER BY ID ----------------
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getUserById(@PathVariable String id) {
+        return baseUserService.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    // ---------------- UPDATE USER ----------------
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateUser(@PathVariable String id, @RequestBody BaseUser userDetails) {
+        return baseUserService.findById(id).map(existingUser -> {
+            existingUser.setName(userDetails.getName());
+            existingUser.setBio(userDetails.getBio());
+            existingUser.setLocation(userDetails.getLocation());
+            existingUser.setSkillsOffered(userDetails.getSkillsOffered());
+            existingUser.setSkillsWanted(userDetails.getSkillsWanted());
+            
+            existingUser.refreshCounts();
+            
+            BaseUser savedUser = baseUserRepository.save(existingUser);
+            return ResponseEntity.ok(savedUser);
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
+    // ---------------- SEARCH / BROWSE SKILLS (Updated for Barter) ----------------
+    @GetMapping("/browse")
+    public ResponseEntity<List<BaseUser>> browseUsers(@RequestParam String skill) {
+        if (skill == null || skill.trim().isEmpty()) {
+            return ResponseEntity.ok(baseUserRepository.findAll());
+        }
+        // ✅ Uses the case-insensitive search we just added to the repository
+        List<BaseUser> users = baseUserRepository.findBySkillsOfferedContainingIgnoreCase(skill);
+        return ResponseEntity.ok(users);
+    }
+
     // ---------------- CREATE USER ----------------
     @PostMapping("/create")
     public ResponseEntity<User> createUser(@RequestBody User userDetails) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String email = auth.getName(); // Get email from JWT
+        String email = auth.getName(); 
 
         BaseUser baseUser = baseUserService.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("BaseUser not found"));
@@ -35,24 +75,10 @@ public class UserController {
         return ResponseEntity.ok(createdUser);
     }
 
-    // ---------------- GET USER BY ID ----------------
-    @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable String id) {
-        return ResponseEntity.ok(userService.getUserById(id));
-    }
-
     // ---------------- GET ALL USERS ----------------
     @GetMapping("/all")
     public ResponseEntity<List<User>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
-    }
-
-    // ---------------- UPDATE USER ----------------
- // UserController.java
-    @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable String id, @RequestBody User userDetails) {
-        // This will now receive the name, bio, skillsOffered, and skillsWanted
-        return ResponseEntity.ok(userService.updateUser(id, userDetails));
     }
 
     // ---------------- DELETE USER ----------------
@@ -60,13 +86,5 @@ public class UserController {
     public ResponseEntity<String> deleteUser(@PathVariable String id) {
         userService.deleteUser(id);
         return ResponseEntity.ok("User deleted successfully");
-    }
-    
- // Add this to your UserController.java
-
-    @GetMapping("/browse")
-    public ResponseEntity<List<User>> browseUsers(@RequestParam String skill) {
-        List<User> users = userService.searchUsersBySkill(skill);
-        return ResponseEntity.ok(users);
     }
 }

@@ -12,14 +12,14 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration; // New Import
-import org.springframework.web.cors.CorsConfigurationSource; // New Import
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource; // New Import
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.SkillExchange.auth.JwtAuthFilter;
 import com.SkillExchange.service.CustomUserDetailsService;
 
-import java.util.Arrays; // New Import
+import java.util.Arrays;
 
 @Configuration
 @EnableGlobalMethodSecurity(prePostEnabled = true)
@@ -33,20 +33,16 @@ public class SecurityConfig {
         this.jwtAuthFilter = jwtAuthFilter;
     }
 
-    // NEW BEAN: Explicitly defines CORS settings for development
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // **IMPORTANT: For local development, allow the React port 5173**
-        // You can change this to Arrays.asList("*") if needed, but defining
-        // the specific local development port is best practice.
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setAllowCredentials(true); // Allow cookies/auth headers
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Cache-Control", "Upgrade", "Connection"));
+        configuration.setAllowCredentials(true); 
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration); // Apply to all paths
+        source.registerCorsConfiguration("/**", configuration); 
         return source;
     }
 
@@ -56,23 +52,20 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
-                // 1. Public endpoints
-                .requestMatchers("/api/auth/**").permitAll()
+                // ✅ Public endpoints
+                .requestMatchers("/api/auth/**", "/api/v1/auth/**").permitAll()
+                .requestMatchers("/chat/**", "/ws/**").permitAll()
+                .requestMatchers("/api/v1/rooms/**").permitAll() 
+                .requestMatchers("/error/**").permitAll() // ✅ Prevents 403 on failed lookups
 
-                // 2. FIXED: Explicitly allow User and Skill endpoints
-                // Without these, your Profile and Dashboard will always return 403/401
-                .requestMatchers("/api/user/**").authenticated()
-                .requestMatchers("/api/skills/**").authenticated()
-
-                // 3. Keep other relevant endpoints
-                .requestMatchers("/api/dashboard/**").authenticated()
-                
-                // Protect everything else
+                // 🔐 Private endpoints
+                .requestMatchers("/api/user/**", "/api/skills/**", "/api/dashboard/**").authenticated()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
+            .authenticationProvider(authenticationProvider())
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

@@ -56,6 +56,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**", "/api/v1/auth/**").permitAll()
                 .requestMatchers("/chat/**", "/ws/**").permitAll()
                 .requestMatchers("/api/v1/rooms/**").permitAll() 
+                .requestMatchers("/api/ai/**").permitAll()
                 .requestMatchers("/error/**").permitAll() 
 
                 // 🔐 Private endpoints (Updated to include requests)

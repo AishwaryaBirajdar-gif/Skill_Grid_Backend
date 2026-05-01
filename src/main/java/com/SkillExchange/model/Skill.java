@@ -22,6 +22,7 @@ public class Skill {
     // ADD THESE TWO FIELDS
     private String type;      // Will store "OFFERED" or "WANTED"
     private String userId;    // To know which user this skill belongs to
+    private String karmaPoints;
     
     private boolean isTrending = false;
 }

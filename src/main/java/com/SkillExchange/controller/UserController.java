@@ -29,9 +29,7 @@ public class UserController {
     // ---------------- GET USER BY ID ----------------
     @GetMapping("/{id}")
     public ResponseEntity<?> getUserById(@PathVariable String id) {
-        return baseUserService.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(userService.getUserById(id));
     }
 
     // ---------------- UPDATE USER ----------------

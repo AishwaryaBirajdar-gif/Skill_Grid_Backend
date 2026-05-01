@@ -32,18 +32,30 @@ public class SkillService {
 
     // Create
     public Skill createSkill(Skill skill) {
-        Skill savedSkill = skillRepository.save(skill);
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
         String email = authentication.getName();
+
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
-        if (user.getSkills() == null) {
-            user.setSkills(new ArrayList<>());
+                .orElseThrow(() ->
+                        new RuntimeException("User not found"));
+
+        skill.setUserId(user.getId());
+
+        Skill savedSkill = skillRepository.save(skill);
+
+        if (user.getSkillsOffered() == null) {
+            user.setSkillsOffered(new ArrayList<>());
         }
-        if (!user.getSkills().contains(savedSkill.getId())) {
-            user.getSkills().add(savedSkill.getId());
-        }
+
+        user.getSkillsOffered().add(savedSkill);
+
+        user.refreshCounts();
+
         userRepository.save(user);
+
         return savedSkill;
     }
 
@@ -91,33 +103,28 @@ public class SkillService {
     }
 
 
-	
-	public List<Skill> getSkillsByOwnerId(String userId) {
-	    // 1. Find the User using the provided userId
-	    Optional<User> userOptional = userRepository.findById(userId); // Assuming findById exists in UserRepository
+    public List<Skill> getSkillsByOwnerId(String userId) {
 
-	    if (userOptional.isEmpty()) {
-	        // Handle case where user does not exist
-	        return List.of(); // Return an empty list
-	    }
+        // Find user
+        Optional<User> userOptional = userRepository.findById(userId);
 
-	    User user = userOptional.get();
-	    
-	    // 2. Get the list of skill IDs from the User object
-	    List<String> skillIds = user.getSkills();
+        // If user not found
+        if (userOptional.isEmpty()) {
+            return List.of();
+        }
 
-	    if (skillIds == null || skillIds.isEmpty()) {
-	        return List.of(); // Return an empty list if the user has no skills listed
-	    }
+        User user = userOptional.get();
 
-	    // 3. Fetch the actual Skill objects using the list of IDs
-	    // Assuming SkillRepository extends MongoRepository or JpaRepository
-	    // and that you can use findAllById(Iterable<ID> ids)
-	    List<Skill> skills = skillRepository.findAllById(skillIds);
-	    
-	    return skills;
-	}
+        // Get skills directly
+        List<Skill> skills = user.getSkillsOffered();
 
+        // Handle null
+        if (skills == null || skills.isEmpty()) {
+            return List.of();
+        }
+
+        return skills;
+    }
 	public boolean deleteByUserIdAndSkillName(String userId, String skillName) {
 		// TODO Auto-generated method stub
 		return false;

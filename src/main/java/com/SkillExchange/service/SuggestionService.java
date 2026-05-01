@@ -1,13 +1,16 @@
-// File: com.SkillExchange.service.SuggestionService.java
 package com.SkillExchange.service;
 
 import com.SkillExchange.model.BaseUser;
+import com.SkillExchange.model.Skill;
 import com.SkillExchange.repository.BaseUserRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.Collections; // Added for safety
 
 @Service
 public class SuggestionService {
@@ -16,29 +19,71 @@ public class SuggestionService {
     private BaseUserRepository userRepository;
 
     public List<BaseUser> getSmartMatches(String userId) {
-        // Find current user or throw custom exception
+
+        // Find current user
         BaseUser currentUser = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+                .orElseThrow(() ->
+                        new RuntimeException("User not found with ID: " + userId));
 
-        // Use Optional to handle potential null lists from DB
-        List<String> myOffers = currentUser.getSkillsOffered() != null ? currentUser.getSkillsOffered() : Collections.emptyList();
-        List<String> myWants = currentUser.getSkillsWanted() != null ? currentUser.getSkillsWanted() : Collections.emptyList();
+        // My offered skills
+        List<Skill> myOffers =
+                currentUser.getSkillsOffered() != null
+                        ? currentUser.getSkillsOffered()
+                        : Collections.emptyList();
 
-        // 2. Fetch all other users using the new repository method
-        List<BaseUser> allOthers = userRepository.findAllByIdNot(userId);
+        // My wanted skills
+        List<Skill> myWants =
+                currentUser.getSkillsWanted() != null
+                        ? currentUser.getSkillsWanted()
+                        : Collections.emptyList();
 
-        // 3. Double-Intersection Logic
+        // Convert to lowercase names for comparison
+        Set<String> myOfferNames = myOffers.stream()
+                .map(skill -> skill.getSkillName().toLowerCase())
+                .collect(Collectors.toSet());
+
+        Set<String> myWantNames = myWants.stream()
+                .map(skill -> skill.getSkillName().toLowerCase())
+                .collect(Collectors.toSet());
+
+        // Fetch all other users
+        List<BaseUser> allOthers =
+                userRepository.findAllByIdNot(userId);
+
+        // Smart barter matching
         return allOthers.stream().filter(otherUser -> {
-            List<String> theirOffers = otherUser.getSkillsOffered() != null ? otherUser.getSkillsOffered() : Collections.emptyList();
-            List<String> theirWants = otherUser.getSkillsWanted() != null ? otherUser.getSkillsWanted() : Collections.emptyList();
 
-            boolean theyHaveWhatIWant = theirOffers.stream()
-                    .anyMatch(skill -> myWants.contains(skill));
+            List<Skill> theirOffers =
+                    otherUser.getSkillsOffered() != null
+                            ? otherUser.getSkillsOffered()
+                            : Collections.emptyList();
 
-            boolean theyWantWhatIHave = theirWants.stream()
-                    .anyMatch(skill -> myOffers.contains(skill));
+            List<Skill> theirWants =
+                    otherUser.getSkillsWanted() != null
+                            ? otherUser.getSkillsWanted()
+                            : Collections.emptyList();
+
+            // Convert to names
+            Set<String> theirOfferNames = theirOffers.stream()
+                    .map(skill -> skill.getSkillName().toLowerCase())
+                    .collect(Collectors.toSet());
+
+            Set<String> theirWantNames = theirWants.stream()
+                    .map(skill -> skill.getSkillName().toLowerCase())
+                    .collect(Collectors.toSet());
+
+            // They offer what I want
+            boolean theyHaveWhatIWant =
+                    theirOfferNames.stream()
+                            .anyMatch(myWantNames::contains);
+
+            // They want what I offer
+            boolean theyWantWhatIHave =
+                    theirWantNames.stream()
+                            .anyMatch(myOfferNames::contains);
 
             return theyHaveWhatIWant && theyWantWhatIHave;
+
         }).collect(Collectors.toList());
     }
 }

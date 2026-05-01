@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.util.List;
 import java.util.ArrayList;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 
 @Data
 @NoArgsConstructor
@@ -27,10 +28,10 @@ public class BaseUser {
     @Field("base_location") // This tells MongoDB to save this specifically as 'base_location'
     private String location;
     private String bio;
-    
-    // ✅ SKILL LISTS
-    private List<String> skillsOffered = new ArrayList<>();
-    private List<String> skillsWanted = new ArrayList<>();
+
+    private List<Skill> skillsOffered = new ArrayList<>();
+
+    private List<Skill> skillsWanted = new ArrayList<>();
 
     // ✅ INCREMENT BOXES: Counts for your UI
     private int skillsOfferedCount = 0;

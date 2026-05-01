@@ -42,11 +42,11 @@ public class User extends BaseUser {
     }
 
     // Cleaning up the helper methods to use inherited fields
-    public List<String> getSkills() {
+    public List<Skill> getSkills() {
         return this.getSkillsOffered(); 
     }
 
-    public void setSkills(List<String> skills) {
+    public void setSkills(List<Skill> skills) {
         this.setSkillsOffered(skills);
     }
 }

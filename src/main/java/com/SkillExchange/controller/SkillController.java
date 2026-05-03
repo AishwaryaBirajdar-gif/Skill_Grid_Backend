@@ -1,7 +1,11 @@
 package com.SkillExchange.controller;
 
+import com.SkillExchange.DTO.SkillResponse;
 import com.SkillExchange.model.Skill;
+import com.SkillExchange.service.SkillAIService;
 import com.SkillExchange.service.SkillService;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +24,14 @@ public class SkillController {
         this.skillService = skillService;
     }
 
+    @Autowired
+    private SkillAIService service;
+
+    // Direct string input (NO SkillRequest DTO)
+    @PostMapping("/analyze")
+    public SkillResponse analyze(@RequestBody String skill) {
+        return service.analyzeSkill(skill);
+    }
     // ✅ POST: Create a Skill
     @PostMapping
     public ResponseEntity<Skill> createSkill(@RequestBody Skill skill) {

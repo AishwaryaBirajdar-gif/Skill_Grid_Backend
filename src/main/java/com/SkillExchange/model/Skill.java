@@ -23,6 +23,7 @@ public class Skill {
     private String type;      // Will store "OFFERED" or "WANTED"
     private String userId;    // To know which user this skill belongs to
     private String karmaPoints;
+    private String depthLevel;
     
     private boolean isTrending = false;
 }

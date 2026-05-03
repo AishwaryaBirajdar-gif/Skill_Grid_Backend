@@ -1,5 +1,6 @@
 package com.SkillExchange.service;
 
+import com.SkillExchange.DTO.SkillResponse;
 import com.SkillExchange.model.Skill;
 import com.SkillExchange.model.User;
 import com.SkillExchange.repository.SkillRepository;
@@ -22,43 +23,95 @@ public class SkillService {
 
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private SkillAIService skillAIService;
+    
 
     @Autowired
     private BaseUserService baseUserService; // to fetch BaseUser from email
+
 
     public SkillService(SkillRepository skillRepository) {
         this.skillRepository = skillRepository;
     }
 
+   
     // Create
     public Skill createSkill(Skill skill) {
 
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
+        // ✅ IMPORTANT FIX
+        // DO NOT overwrite frontend userId
 
-        String email = authentication.getName();
+        if (skill.getUserId() == null || skill.getUserId().isEmpty()) {
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new RuntimeException("User not found"));
+            Authentication authentication =
+                    SecurityContextHolder.getContext().getAuthentication();
 
-        skill.setUserId(user.getId());
+            String email = authentication.getName();
 
-        Skill savedSkill = skillRepository.save(skill);
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() ->
+                            new RuntimeException("User not found"));
 
-        if (user.getSkillsOffered() == null) {
-            user.setSkillsOffered(new ArrayList<>());
+            skill.setUserId(user.getId());
         }
 
-        user.getSkillsOffered().add(savedSkill);
+        // ✅ AI DEPTH GENERATION
+        try {
 
-        user.refreshCounts();
+            String input =
+                    (skill.getDescription() != null &&
+                     !skill.getDescription().isBlank())
+                            ? skill.getDescription()
+                            : skill.getSkillName();
 
-        userRepository.save(user);
+            SkillResponse aiResponse =
+                    skillAIService.analyzeSkill(input);
+
+            if (aiResponse != null &&
+                    aiResponse.getLevel() != null) {
+
+                skill.setDepthLevel(aiResponse.getLevel());
+
+            } else {
+
+                skill.setDepthLevel("Beginner");
+            }
+
+        } catch (Exception e) {
+
+            System.out.println(
+                    "AI depth generation failed: " + e.getMessage()
+            );
+
+            skill.setDepthLevel("Beginner");
+        }
+
+        // ✅ SAVE SKILL
+        Skill savedSkill = skillRepository.save(skill);
+
+        // ✅ FIND ACTUAL OWNER
+        Optional<User> userOptional =
+                userRepository.findById(skill.getUserId());
+
+        if (userOptional.isPresent()) {
+
+            User user = userOptional.get();
+
+            if (user.getSkillsOffered() == null) {
+                user.setSkillsOffered(new ArrayList<>());
+            }
+
+            user.getSkillsOffered().add(savedSkill);
+
+            user.refreshCounts();
+
+            userRepository.save(user);
+        }
 
         return savedSkill;
     }
-
     // Get All
     public List<Skill> getAllSkills() {
         return skillRepository.findAll();

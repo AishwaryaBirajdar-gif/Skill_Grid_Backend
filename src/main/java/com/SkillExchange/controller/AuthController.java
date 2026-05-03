@@ -1,6 +1,7 @@
 package com.SkillExchange.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -14,6 +15,8 @@ import com.SkillExchange.auth.JwtUtil;
 import com.SkillExchange.auth.LoginRequest;
 import com.SkillExchange.model.BaseUser;
 import com.SkillExchange.model.JwtResponse;
+import com.SkillExchange.model.User;
+import com.SkillExchange.repository.UserRepository;
 import com.SkillExchange.repository.BaseUserRepository;
 import com.SkillExchange.service.BaseUserService;
 
@@ -35,6 +38,9 @@ public class AuthController {
 
     @Autowired
     private BaseUserService baseuserService;
+    
+    @Autowired
+    private UserRepository userRepository;
 
     // **Signup method** - Register new users and return a JWT token
     @PostMapping("/signup")
@@ -56,7 +62,19 @@ public class AuthController {
         System.out.println("--- DEBUG: Attempting to save user with Role: " + baseuser.getRole().name() + " ---"); // ⬅️ NEW LOG
 
         // Save the user to the database
-        baseuserRepository.save(baseuser);
+        //baseuserRepository.save(baseuser);
+        
+        BaseUser savedBaseUser = baseuserRepository.save(baseuser);
+
+     // CREATE USER PROFILE DOCUMENT
+     User user = new User(savedBaseUser);
+
+     user.setName(savedBaseUser.getName());
+     user.setEmail(savedBaseUser.getEmail());
+
+     userRepository.save(user);
+        
+        
 
         System.out.println("--- DEBUG: baseuserRepository.save() executed! User ID (after save): " + baseuser.getId() + " ---"); // ⬅️ NEW LOG
         

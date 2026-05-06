@@ -1,14 +1,14 @@
 package com.SkillExchange.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-import java.util.ArrayList;
-import java.util.List;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import java.util.List;
+import java.util.ArrayList;
 
-@Data
+@Data 
 @NoArgsConstructor
 @AllArgsConstructor
 @Document(collection = "requests")
@@ -17,22 +17,39 @@ public class SkillRequest {
     private String id;
     private String senderId;
     private String receiverId;
-    private String skillRequested; 
-    private String skillOffered;   
-    private String status = "PENDING";
-    private String senderName;
+    private String senderName; 
     private String receiverName;
-    
+    private String skillRequested; // Skill Learner wants from Teacher
+    private String skillOffered;   // Skill Teacher offers Learner
+    private String status; 
+
+    private List<Milestone> milestones = new ArrayList<>(); 
     private List<String> senderRequirements = new ArrayList<>(); 
     private List<String> receiverRequirements = new ArrayList<>(); 
+    
+    private boolean senderReqNeedsUpdate = false;
+    private boolean receiverReqNeedsUpdate = false;
 
+    private int totalKarmaPrice = 50; 
     private int senderProgress = 0; 
-    private int receiverProgress = 0;
-
+    private int receiverProgress = 0; 
     private boolean senderLocked = false; 
     private boolean receiverLocked = false; 
+    private boolean midwayKarmaTransferred = false; 
 
-    // Negotiation Flags
-    private boolean senderRequirementsApproved = false; // Does Sender approve what Learner wrote?
-    private boolean receiverRequirementsApproved = false; // Does Receiver approve what Learner wrote?
+    private boolean senderRequirementsApproved = false;
+    private boolean receiverRequirementsApproved = false;
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class Milestone {
+        private String id;
+        private String title;
+        private String description;
+        private String status; 
+        private boolean senderConfirmed;
+        private boolean receiverConfirmed;
+        private int karmaValue;
+    }
 }

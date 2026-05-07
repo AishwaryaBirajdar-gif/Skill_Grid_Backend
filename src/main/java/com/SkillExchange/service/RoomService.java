@@ -1,8 +1,8 @@
 package com.SkillExchange.service;
 
 import com.SkillExchange.model.ChatMessage;
-import com.SkillExchange.model.Room;
-import com.SkillExchange.repository.RoomRepository;
+import com.SkillExchange.model.SkillRequest;
+import com.SkillExchange.repository.RequestRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,24 +13,35 @@ import java.util.List;
 public class RoomService {
 
     @Autowired
-    private RoomRepository roomRepository;
+    private RequestRepository requestRepository; 
 
-    public List<ChatMessage> getMessages(String roomId) {
-        Room room = roomRepository.findByRoomId(roomId);
-        if (room != null) {
-            return room.getMessages();
-        }
-        return new ArrayList<>(); // Return empty list if room doesn't exist yet
+    /**
+     * Retrieves all saved messages for a specific barter request room.
+     */
+    public List<ChatMessage> getMessages(String requestId) {
+        return requestRepository.findById(requestId)
+                .map(SkillRequest::getMessages)
+                .orElse(new ArrayList<>());
     }
 
-    // You can call this from your ChatController to save new messages
-    public void saveMessage(String roomId, ChatMessage message) {
-        Room room = roomRepository.findByRoomId(roomId);
-        if (room == null) {
-            room = new Room();
-            room.setRoomId(roomId);
+    /**
+     * Appends a new message to the SkillRequest document and persists it to MongoDB.
+     */
+    public void saveMessage(String requestId, ChatMessage message) {
+        // 1. Retrieve the existing request document
+        SkillRequest request = requestRepository.findById(requestId)
+                .orElseThrow(() -> new RuntimeException("Chat Room (Request) not found with ID: " + requestId));
+
+        // 2. Ensure the messages list is initialized (Null safety)
+        if (request.getMessages() == null) {
+            request.setMessages(new ArrayList<>());
         }
-        room.getMessages().add(message);
-        roomRepository.save(room);
+
+        // 3. Add the new message to the list
+        request.getMessages().add(message);
+
+        // 4. Save the entire document back to MongoDB
+        // This is the critical step for persistence!
+        requestRepository.save(request);
     }
 }

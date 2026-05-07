@@ -8,8 +8,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ChatMessage {
-    private String sender;
+    private String sender;    // The name
+    private String senderId;  // ✅ Add this! It matches 'currentUserId' from React
     private String content;
     private String roomId;
-    private String timeStamp;
+    private String timestamp;
 }

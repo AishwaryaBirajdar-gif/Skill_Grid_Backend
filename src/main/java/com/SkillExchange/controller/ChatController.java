@@ -1,20 +1,21 @@
 package com.SkillExchange.controller;
 
-import com.SkillExchange.model.ChatMessage; 
-import com.SkillExchange.service.RoomService; // ✅ Added Import
+import com.SkillExchange.model.ChatMessage;
+import com.SkillExchange.service.RoomService;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
 
+import java.time.LocalDateTime;
+
 @Controller
 @CrossOrigin("*")
 public class ChatController {
 
-    private final RoomService roomService; // ✅ Added Service Field
+    private final RoomService roomService;
 
-    // ✅ Added Constructor for Injection
     public ChatController(RoomService roomService) {
         this.roomService = roomService;
     }
@@ -25,10 +26,19 @@ public class ChatController {
             @DestinationVariable String requestId,
             ChatMessage message
     ) {
-        // ✅ Save the message to MongoDB so history can be loaded later
+        // ✅ 1. Set timestamp for history and sorting
+        try {
+            message.setTimestamp(LocalDateTime.now().toString());
+        } catch (Exception e) {
+            System.out.println("Timestamp field missing in ChatMessage model");
+        }
+
+        // ✅ 2. Save the message (including senderId) to MongoDB
+        // This ensures the history persists after a reload
         roomService.saveMessage(requestId, message); 
         
-        // Broadcasts the message to everyone subscribed to /topic/room/{requestId}
+        // ✅ 3. Broadcast the message
+        // The message object now contains senderId, so the frontend can align it
         return message; 
     }
 }

@@ -19,8 +19,8 @@ public class SkillRequest {
     private String receiverId;
     private String senderName; 
     private String receiverName;
-    private String skillRequested; // Skill Learner wants from Teacher
-    private String skillOffered;   // Skill Teacher offers Learner
+    private String skillRequested; 
+    private String skillOffered;   
     private String status; 
 
     private List<Milestone> milestones = new ArrayList<>(); 
@@ -39,6 +39,10 @@ public class SkillRequest {
 
     private boolean senderRequirementsApproved = false;
     private boolean receiverRequirementsApproved = false;
+    
+    // ✅ Keep this clean. @Data will handle the getters/setters automatically.
+    // Initializing with new ArrayList<>() prevents NullPointerExceptions.
+    private List<ChatMessage> messages = new ArrayList<>();
 
     @Data
     @NoArgsConstructor

@@ -3,7 +3,7 @@ package com.SkillExchange.controller;
 import com.SkillExchange.model.SkillRequest;
 import com.SkillExchange.model.SkillRequest.Milestone;
 import com.SkillExchange.model.User;
-import com.SkillExchange.repository.RequestRepository;
+import com.SkillExchange.repository.SkillRequestRepository;
 import com.SkillExchange.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -20,9 +20,15 @@ import java.util.UUID;
 public class RequestController {
 
     @Autowired
-    private RequestRepository requestRepository;
+    private SkillRequestRepository requestRepository;
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private com.SkillExchange.repository.FeedbackRepository feedbackRepository;
+    
+    @Autowired
+    private com.SkillExchange.service.RequestService requestService;
 
     @GetMapping("/{requestId}")
     public ResponseEntity<SkillRequest> getRequestById(@PathVariable String requestId) {

@@ -2,7 +2,9 @@ package com.SkillExchange.service;
 
 import com.SkillExchange.model.ChatMessage;
 import com.SkillExchange.model.SkillRequest;
-import com.SkillExchange.repository.RequestRepository;
+import com.SkillExchange.repository.SkillRepository;
+import com.SkillExchange.repository.SkillRequestRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,7 +15,7 @@ import java.util.List;
 public class RoomService {
 
     @Autowired
-    private RequestRepository requestRepository; 
+    private SkillRequestRepository requestRepository; 
 
     /**
      * Retrieves all saved messages for a specific barter request room.

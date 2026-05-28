@@ -7,6 +7,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;       // ✅ Added Import
+import java.util.HashMap;   // ✅ Added Import
 
 @Data 
 @NoArgsConstructor
@@ -22,7 +24,7 @@ public class SkillRequest {
     private String skillRequested; 
     private String skillOffered;   
     private String status; 
-
+    
     private List<Milestone> milestones = new ArrayList<>(); 
     private List<String> senderRequirements = new ArrayList<>(); 
     private List<String> receiverRequirements = new ArrayList<>(); 
@@ -40,9 +42,11 @@ public class SkillRequest {
     private boolean senderRequirementsApproved = false;
     private boolean receiverRequirementsApproved = false;
     
-    // ✅ Keep this clean. @Data will handle the getters/setters automatically.
-    // Initializing with new ArrayList<>() prevents NullPointerExceptions.
     private List<ChatMessage> messages = new ArrayList<>();
+
+    // ✅ NEW FIELD: Tracks if sender/receiver have given feedback
+    // This allows the "Feedback Modal" to know when to hide.
+    private Map<String, Boolean> feedbackStatus = new HashMap<>();
 
     @Data
     @NoArgsConstructor

@@ -14,7 +14,6 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "baseUser")
 public class BaseUser {
     @Id
     private String id;

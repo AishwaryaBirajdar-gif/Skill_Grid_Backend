@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserService {
@@ -14,11 +15,22 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
-    // ✅ STEP 2 Logic: Search for users offering a specific skill
+    // --- Merged methods from BaseUserService ---
+    public Optional<User> findByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
+    public User save(User user) {
+        return userRepository.save(user);
+    }
+    
+    // --- Existing UserService methods ---
+
     public List<User> searchUsersBySkill(String skill) {
         return userRepository.findBySkillsOfferedContainingIgnoreCase(skill);
     }
 
+    // Note: If you have logic that uses BaseUser, you can pass it to this method
     public User createUser(BaseUser baseUser, User userDetails) {
         User user = new User(baseUser);
         user.setUsername(userDetails.getUsername());
@@ -28,7 +40,6 @@ public class UserService {
         user.setLanguages(userDetails.getLanguages());
         user.setProfilePic(userDetails.getProfilePic());
         
-        // Initialize lists to avoid null pointers
         user.setSkillsOffered(userDetails.getSkillsOffered());
         user.setSkillsWanted(userDetails.getSkillsWanted());
 
@@ -47,14 +58,12 @@ public class UserService {
     public User updateUser(String id, User userDetails) {
         User user = getUserById(id);
 
-        // Update basic info
         if (userDetails.getName() != null) user.setName(userDetails.getName());
         if (userDetails.getBio() != null) user.setBio(userDetails.getBio());
         if (userDetails.getLocation() != null) user.setLocation(userDetails.getLocation());
         if (userDetails.getProfilePic() != null) user.setProfilePic(userDetails.getProfilePic());
         if (userDetails.getAvaliable() != null) user.setAvaliable(userDetails.getAvaliable());
 
-        // ✅ IMPORTANT: Update the Skill Lists for Bartering
         if (userDetails.getSkillsOffered() != null) {
             user.setSkillsOffered(userDetails.getSkillsOffered());
         }
@@ -62,7 +71,6 @@ public class UserService {
             user.setSkillsWanted(userDetails.getSkillsWanted());
         }
 
-        // Maintain points
         user.setKarmaPoints(userDetails.getKarmaPoints());
         user.setTrustScore(userDetails.getTrustScore());
 

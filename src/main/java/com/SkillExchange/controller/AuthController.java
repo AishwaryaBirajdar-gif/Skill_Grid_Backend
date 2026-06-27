@@ -1,7 +1,6 @@
 package com.SkillExchange.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,6 +18,9 @@ import com.SkillExchange.model.User;
 import com.SkillExchange.repository.UserRepository;
 import com.SkillExchange.repository.BaseUserRepository;
 import com.SkillExchange.service.BaseUserService;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -42,12 +44,8 @@ public class AuthController {
     @Autowired
     private UserRepository userRepository;
 
-    // **Signup method** - Register new users and return a JWT token
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody BaseUser baseuser) {
-        System.out.println("--- DEBUG: Incoming Signup Request for Email: " + baseuser.getEmail() + " ---"); // ⬅️ NEW LOG
-
-        // Check if the email is already registered
         if (baseuserRepository.findByEmail(baseuser.getEmail()).isPresent()) {
             return ResponseEntity.badRequest().body("Email is already in use.");
         }
@@ -55,49 +53,42 @@ public class AuthController {
         // Encode the password
         baseuser.setPassword(passwordEncoder.encode(baseuser.getPassword()));
 
+        // Set default role and status
         if (baseuser.getRole() == null) {
-            baseuser.setRole(BaseUser.Role.USER); // ✅ reference inner enum
+            baseuser.setRole(BaseUser.Role.USER);
         }
-
-        System.out.println("--- DEBUG: Attempting to save user with Role: " + baseuser.getRole().name() + " ---"); // ⬅️ NEW LOG
-
-        // Save the user to the database
-        //baseuserRepository.save(baseuser);
+        baseuser.setStatus("ACTIVE"); 
         
+        // Add CreatedAt timestamp for your CSV Report
+        baseuser.setCreatedAt(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE));
+
+        // Save the user
         BaseUser savedBaseUser = baseuserRepository.save(baseuser);
 
-     // CREATE USER PROFILE DOCUMENT
-     User user = new User(savedBaseUser);
-
-     user.setName(savedBaseUser.getName());
-     user.setEmail(savedBaseUser.getEmail());
-
-     userRepository.save(user);
+        // CREATE USER PROFILE DOCUMENT
+        User user = new User(savedBaseUser);
+        user.setName(savedBaseUser.getName());
+        user.setEmail(savedBaseUser.getEmail());
+        userRepository.save(user);
         
-        
-
-        System.out.println("--- DEBUG: baseuserRepository.save() executed! User ID (after save): " + baseuser.getId() + " ---"); // ⬅️ NEW LOG
-        
-        // Generate JWT token for the newly registered user
-        String role = baseuser.getRole().name(); // Get the role assigned to the user
+        // Generate JWT token
+        String role = baseuser.getRole().name();
         String token = jwtUtil.generateToken(baseuser.getEmail(), role, baseuser.getId());
 
-        // Create a response with the JWT and user details
         JwtResponse response = new JwtResponse(
                 token,
                 baseuser.getId(),
                 baseuser.getEmail(),
                 baseuser.getName(),
-                role // Include role in the response
+                role
         );
 
-        return ResponseEntity.ok(response); // Return response with JWT token
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> signin(@RequestBody LoginRequest loginRequest) {
         try {
-            // Authenticate the user with Spring Security
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             loginRequest.getEmail(),
@@ -105,15 +96,11 @@ public class AuthController {
                     )
             );
 
-            // Save authentication in context
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            // ✅ Get Spring Security User object
             org.springframework.security.core.userdetails.User userDetails =
                     (org.springframework.security.core.userdetails.User) authentication.getPrincipal();
 
-            // ✅ Fetch the actual BaseUser from DB (Mongo)
-            // Fetch BaseUser from DB using Optional
             BaseUser user = baseuserRepository.findByEmail(userDetails.getUsername())
                     .orElse(null);
 
@@ -121,13 +108,18 @@ public class AuthController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
             }
 
-            // ✅ Extract role (granted authority)
+            // --- BAN CHECK LOGIC ---
+            if ("BANNED".equals(user.getStatus())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                                     .body("Account is banned. Please contact support.");
+            }
+
+            // Extract role
             String role = authentication.getAuthorities().iterator().next().getAuthority();
 
-            // ✅ Generate JWT token
+            // Generate JWT token
             String token = jwtUtil.generateToken(user.getEmail(), role, user.getId());
 
-            // ✅ Build and return response
             JwtResponse response = new JwtResponse(
                     token,
                     user.getId(),

@@ -22,7 +22,7 @@ import com.SkillExchange.service.CustomUserDetailsService;
 import java.util.Arrays;
 
 @Configuration
-@EnableMethodSecurity // Modern replacement for EnableGlobalMethodSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
@@ -46,20 +46,26 @@ public class SecurityConfig {
         return source;
     }
 
+ // ... (keep all your imports)
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
-                // ✅ Public endpoints
+                // 1. Explicitly Public Endpoints
                 .requestMatchers("/api/auth/**", "/api/v1/auth/**").permitAll()
                 .requestMatchers("/chat/**", "/ws/**").permitAll()
                 .requestMatchers("/api/v1/rooms/**").permitAll() 
                 .requestMatchers("/api/ai/**").permitAll()
                 .requestMatchers("/error/**").permitAll() 
+                .requestMatchers("/api/admin/dashboard-stats").permitAll()
 
-                // 🔐 Private endpoints (Updated to include requests)
+                // 2. Admin Endpoints: Changed to hasAuthority to match exact string in your DB/JWT
+                .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
+
+                // 3. Private Endpoints
                 .requestMatchers(
                     "/api/user/**", 
                     "/api/skills/**", 
@@ -78,6 +84,7 @@ public class SecurityConfig {
         return http.build();
     }
 
+// ... (keep the rest of your file as is)
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

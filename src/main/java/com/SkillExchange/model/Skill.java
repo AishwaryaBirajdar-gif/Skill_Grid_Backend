@@ -19,11 +19,13 @@ public class Skill {
     private String category;
     private String description;
     
-    // ADD THESE TWO FIELDS
-    private String type;      // Will store "OFFERED" or "WANTED"
-    private String userId;    // To know which user this skill belongs to
+    private String type;        // "OFFERED" or "WANTED"
+    private String userId;      // Owner ID
     private String karmaPoints;
     private String depthLevel;
+    
+    // ADDED: This field will now be recognized by Lombok
+    private String status = "PENDING"; 
     
     private boolean isTrending = false;
 }
